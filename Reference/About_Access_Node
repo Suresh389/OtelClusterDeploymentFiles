@@ -1,0 +1,23 @@
+Deploy the pod:
+
+sh
+kubectl apply -f access-node.yaml
+Get a shell into the pod:
+
+sh
+kubectl exec -it access-node -- /bin/bash
+List All Directories in /var
+From the pod shell, list all directories in /var to see if there's another location where logs might be stored:
+
+sh
+ls /var
+If you find directories like lib or log, explore them further:
+
+sh
+ls /var/lib
+ls /var/log
+Use find to Locate Log Files
+You can use the find command to search for log files:
+
+sh
+find /var -name '*.log'

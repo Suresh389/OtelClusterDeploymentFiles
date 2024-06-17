@@ -1,0 +1,86 @@
+In Kubernetes, the metrics-server is not directly configured via the Kubelet or its kubeconfig files. Instead, it's typically deployed as a separate component and its configuration is managed via Kubernetes resources like Deployments and ConfigMaps within your cluster. The Kubelet configuration files you are looking at (kubeconfig and bootstrap-kubeconfig) do not contain settings for enabling the Metrics Server.
+
+Here's a step-by-step guide on how to ensure the metrics-server is enabled and properly configured in your Kubernetes cluster, specifically for Azure Kubernetes Service (AKS), and in general Kubernetes clusters.
+
+1. Checking Metrics Server Deployment on AKS
+In AKS, the Metrics Server can be deployed using AKS-specific commands or through standard Kubernetes manifests.
+
+Using Azure CLI to Enable Metrics Server:
+If you’re using AKS, you can ensure the Metrics Server is enabled using the Azure CLI. Here's how:
+
+bash
+Copy code
+az aks enable-addons --addons monitoring --name <your-aks-cluster-name> --resource-group <your-resource-group>
+This command installs the monitoring add-on, which includes the Metrics Server.
+
+2. Deploying Metrics Server Manually
+If the Metrics Server is not deployed, you can manually deploy it using the official Kubernetes Metrics Server manifests.
+
+Download and Apply Metrics Server Manifests:
+bash
+Copy code
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+This will deploy the Metrics Server in your cluster under the kube-system namespace.
+
+3. Checking Metrics Server Deployment
+To verify that the Metrics Server is running, you can check the status of the pods:
+
+bash
+Copy code
+kubectl get pods -n kube-system | grep metrics-server
+You should see a pod similar to:
+
+bash
+Copy code
+metrics-server-6d9ff5c9b6-2dl4f   1/1     Running   0          5m
+4. Configuring Metrics Server
+The Metrics Server's configuration can be adjusted by editing the deployment:
+
+Edit the Metrics Server Deployment:
+
+bash
+Copy code
+kubectl edit deployment metrics-server -n kube-system
+Add any necessary arguments:
+
+For example, to enable insecure TLS (useful in test environments):
+
+yaml
+Copy code
+spec:
+  containers:
+  - args:
+    - --kubelet-insecure-tls
+Save and exit to apply changes.
+
+5. Validating Metrics Server Functionality
+Ensure that Metrics Server is working by running:
+
+bash
+Copy code
+kubectl top nodes
+kubectl top pods
+These commands should show the CPU and memory usage for nodes and pods.
+
+6. Updating Cluster Role Bindings
+Metrics Server requires the correct cluster roles and bindings to function properly. Ensure it has the necessary permissions by checking the roles:
+
+bash
+Copy code
+kubectl get clusterrolebinding -n kube-system | grep metrics-server
+7. Additional Configuration
+In some cases, you might need to configure Kubelet to expose certain metrics if they are required by the Metrics Server. Ensure that Kubelet is accessible for metrics:
+
+Edit Kubelet Configuration:
+
+Depending on your setup, Kubelet configuration might be managed through a ConfigMap or command-line arguments passed during Kubelet start.
+
+Enable Metrics Endpoint:
+
+Ensure that Kubelet is set to expose the metrics endpoint. This might involve ensuring readOnlyPort is set to a specific port (like 10255) and that it’s not firewalled off.
+
+8. Inspecting Configuration Files
+While the kubeconfig files you inspected do not directly relate to Metrics Server configuration, they do give you insight into how your cluster nodes are configured. Make sure your cluster's API server is accessible and that the Kubelet is reachable as needed by the Metrics Server.
+
+Summary
+To enable and configure the Metrics Server, focus on deploying and configuring it using Kubernetes manifests and tools rather than modifying Kubelet configuration files. Ensure that your AKS or Kubernetes cluster has the Metrics Server deployed, the appropriate permissions are set, and that the Metrics Server can access the Kubelet metrics endpoint.
