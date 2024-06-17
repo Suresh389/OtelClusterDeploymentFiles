@@ -22,7 +22,17 @@ data:
         collection_interval: 10s
         auth_type: 'serviceAccount'
       filelog:
-        include: [/var/log/containers/*.log]
+        include:
+          - /var/log/containers/*.log              # Container logs
+          - /var/log/pods/**/*.log                 # Pod logs
+          - /var/log/syslog                        # Node logs (assuming Linux-based nodes)
+          - /var/log/kubelet/kubelet.log           # Node logs (Kubelet)
+          - /var/log/kubernetes/**/*.log           # Cluster logs (Kubernetes system logs)
+          - /var/log/journal/node/*                # Node logs (systemd journal if applicable)
+          - /var/log/kube-apiserver.log            # Cluster logs (API server)
+          - /var/log/kube-scheduler.log            # Cluster logs (Scheduler)
+          - /var/log/kube-controller-manager.log   # Cluster logs (Controller Manager)
+          - /var/log/etcd.log                      # Cluster logs (etcd)
         start_at: beginning
         operators:
           - type: regex_parser
